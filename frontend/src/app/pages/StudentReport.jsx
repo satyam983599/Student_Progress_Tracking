@@ -5,8 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import AnalyticsCards from "../components/AnalyticsCards";
-import PerformanceLineChart from "../components/PerformanceLineChart";
-import SubjectBarChart from "../components/SubjectBarChart";
+import ReportPDF from "../components/ReportPDF";
 
 import { fetchStudentReport } from "../features/marksSlice";
 import { fetchStudents } from "../features/studentSlice";
@@ -15,13 +14,9 @@ function StudentReport() {
   const { id } = useParams();
   const dispatch = useDispatch();
 
-  const { report = null, subjectAnalysis = [] } = useSelector(
-    (state) => state.marks
-  );
+  const { report } = useSelector((state) => state.marks);
+  const { students } = useSelector((state) => state.students);
 
-  const { students = [] } = useSelector((state) => state.students);
-
-  // ✅ FIX: fetchStudents USED HERE → no ESLint error
   useEffect(() => {
     dispatch(fetchStudents());
   }, [dispatch]);
@@ -32,35 +27,47 @@ function StudentReport() {
     }
   }, [id, dispatch]);
 
-  const student = students.find((s) => s._id === id);
+  const student =
+    students?.find((s) => s._id === id) || {};
 
-  // STATUS LOGIC
-  const getStatus = (percent) => {
-    if (!percent) return "No Data";
-    if (percent >= 75) return "Excellent 🔥";
-    if (percent >= 60) return "Good 👍";
-    if (percent >= 40) return "Average ⚠️";
-    return "Needs Improvement ❌";
-  };
+  const exams = report?.exams || {};
 
-  // SAFE MARKS
-  const allMarks = [
-    report?.internalTest1,
-    report?.internalTest2,
-    report?.project1,
-    report?.halfYearly,
-    report?.internalTest3,
-    report?.internalTest4,
-    report?.project2,
-    report?.finalExam,
-  ].filter((m) => typeof m === "number");
+  let totalObtained = 0;
+  let totalMarks = 0;
+  let subjectsCount = 0;
+  let examsConducted = 0;
 
-  const totalMarks = allMarks.reduce((acc, val) => acc + val, 0);
+  Object.values(exams).forEach((exam) => {
+    if (exam?.subjects?.length) {
+      examsConducted++;
 
-  const percent =
-    allMarks.length > 0
-      ? Math.round((totalMarks / (allMarks.length * 100)) * 100)
+      exam.subjects.forEach((sub) => {
+        totalObtained += Number(
+          sub.marksObtained || 0
+        );
+
+        totalMarks += Number(
+          sub.totalMarks || 0
+        );
+
+        subjectsCount++;
+      });
+    }
+  });
+
+  const percentage =
+    totalMarks > 0
+      ? ((totalObtained / totalMarks) * 100).toFixed(2)
       : 0;
+
+  const status =
+    percentage >= 75
+      ? "Excellent"
+      : percentage >= 60
+      ? "Good"
+      : percentage >= 40
+      ? "Average"
+      : "Needs Improvement";
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -74,97 +81,314 @@ function StudentReport() {
         <div className="p-6 space-y-6">
 
           {/* HEADER */}
-          <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-blue-500 text-white p-8 rounded-3xl shadow-lg">
+
+          <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-blue-600 text-white p-8 rounded-3xl shadow-lg">
             <h1 className="text-3xl font-bold">
-              {student?.name || "Student Report"}
+              Student Progress Report
             </h1>
 
             <p className="mt-2">
-              Roll No: {student?.rollNumber || "-"} | Class:{" "}
-              {student?.class || "-"}
-            </p>
-
-            <p className="mt-3 text-lg font-semibold">
-              Status: {getStatus(percent)}
+              Roll No: {report?.rollNumber}
             </p>
           </div>
 
-          {/* CARDS */}
+          {/* ANALYTICS */}
+
           <AnalyticsCards
             totalStudents={1}
-            examsConducted={8}
-            averagePercentage={percent}
-            needsAttention={percent < 50 ? 1 : 0}
+            examsConducted={examsConducted}
+            averagePercentage={percentage}
+            needsAttention={
+              percentage < 40 ? 1 : 0
+            }
           />
 
-          {/* CHARTS */}
-          <div className="grid md:grid-cols-2 gap-6">
+          {/* STUDENT PROFILE */}
 
-            <PerformanceLineChart report={report} />
+          <div className="bg-white rounded-3xl shadow-sm p-6">
 
-            <SubjectBarChart subjectAnalysis={subjectAnalysis} />
+            <h2 className="text-2xl font-bold mb-5">
+              Student Profile
+            </h2>
+
+            <div className="grid md:grid-cols-4 gap-5">
+
+              <div>
+                <p className="text-gray-500">
+                  Student Name
+                </p>
+
+                <p className="font-semibold">
+                  {student?.name}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-gray-500">
+                  Roll Number
+                </p>
+
+                <p className="font-semibold">
+                  {student?.rollNumber}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-gray-500">
+                  Class
+                </p>
+
+                <p className="font-semibold">
+                  {student?.class}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-gray-500">
+                  Section
+                </p>
+
+                <p className="font-semibold">
+                  {student?.section}
+                </p>
+              </div>
+
+            </div>
 
           </div>
 
-          {/* TABLE */}
+          {/* PARENT DETAILS */}
+
+          <div className="bg-white rounded-3xl shadow-sm p-6">
+
+            <h2 className="text-2xl font-bold mb-5">
+              Parent Details
+            </h2>
+
+            <div className="grid md:grid-cols-2 gap-5">
+
+              <div>
+                <p className="text-gray-500">
+                  Father Name
+                </p>
+
+                <p className="font-semibold">
+                  {student?.fatherName || "-"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-gray-500">
+                  Mother Name
+                </p>
+
+                <p className="font-semibold">
+                  {student?.motherName || "-"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-gray-500">
+                  Guardian Name
+                </p>
+
+                <p className="font-semibold">
+                  {student?.guardianName || "-"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-gray-500">
+                  Phone
+                </p>
+
+                <p className="font-semibold">
+                  {student?.phone || "-"}
+                </p>
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* ACADEMIC SUMMARY */}
+
+          <div className="bg-white rounded-3xl shadow-sm p-6">
+
+            <h2 className="text-2xl font-bold mb-5">
+              Academic Summary
+            </h2>
+
+            <div className="grid md:grid-cols-4 gap-5">
+
+              <div>
+                <p className="text-gray-500">
+                  Subjects
+                </p>
+
+                <p className="text-2xl font-bold">
+                  {subjectsCount}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-gray-500">
+                  Exams Conducted
+                </p>
+
+                <p className="text-2xl font-bold">
+                  {examsConducted}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-gray-500">
+                  Percentage
+                </p>
+
+                <p className="text-2xl font-bold text-green-600">
+                  {percentage}%
+                </p>
+              </div>
+
+              <div>
+                <p className="text-gray-500">
+                  Status
+                </p>
+
+                <p className="text-2xl font-bold text-violet-600">
+                  {status}
+                </p>
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* EXAM WISE REPORT */}
+
+          {Object.entries(exams).map(
+            ([examName, exam]) => {
+              if (
+                !exam?.subjects ||
+                exam.subjects.length === 0
+              ) {
+                return null;
+              }
+
+              return (
+                <div
+                  key={examName}
+                  className="bg-white rounded-3xl shadow-sm p-6"
+                >
+
+                  <h2 className="text-xl font-bold capitalize mb-4">
+                    {examName}
+                  </h2>
+
+                  <div className="overflow-x-auto">
+
+                    <table className="w-full">
+
+                      <thead className="bg-gray-50">
+
+                        <tr>
+                          <th className="p-3 text-left">
+                            Subject
+                          </th>
+
+                          <th className="p-3 text-left">
+                            Obtained
+                          </th>
+
+                          <th className="p-3 text-left">
+                            Total
+                          </th>
+
+                          <th className="p-3 text-left">
+                            Percentage
+                          </th>
+                        </tr>
+
+                      </thead>
+
+                      <tbody>
+
+                        {exam.subjects.map(
+                          (sub, index) => (
+                            <tr
+                              key={index}
+                              className="border-t"
+                            >
+                              <td className="p-3">
+                                {sub.subject}
+                              </td>
+
+                              <td className="p-3">
+                                {
+                                  sub.marksObtained
+                                }
+                              </td>
+
+                              <td className="p-3">
+                                {
+                                  sub.totalMarks
+                                }
+                              </td>
+
+                              <td className="p-3">
+                                {(
+                                  (sub.marksObtained /
+                                    sub.totalMarks) *
+                                  100
+                                ).toFixed(1)}
+                                %
+                              </td>
+                            </tr>
+                          )
+                        )}
+
+                      </tbody>
+
+                    </table>
+
+                  </div>
+
+                </div>
+              );
+            }
+          )}
+
+          {/* TEACHER REMARKS */}
+
           <div className="bg-white rounded-3xl shadow-sm p-6">
 
             <h2 className="text-2xl font-bold mb-4">
-              Exam Performance Summary
+              Teacher Remarks
             </h2>
 
-            <table className="w-full">
+            <p>
+              {report?.remarks ||
+                "No Remarks Available"}
+            </p>
 
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="p-3 text-left">Exam</th>
-                  <th className="p-3 text-left">Marks</th>
-                  <th className="p-3 text-left">Status</th>
-                </tr>
-              </thead>
+          </div>
 
-              <tbody>
+          {/* PDF */}
 
-                {[
-                  ["Internal Test 1", report?.internalTest1],
-                  ["Internal Test 2", report?.internalTest2],
-                  ["Project 1", report?.project1],
-                  ["Half Yearly", report?.halfYearly],
-                  ["Internal Test 3", report?.internalTest3],
-                  ["Internal Test 4", report?.internalTest4],
-                  ["Project 2", report?.project2],
-                  ["Final Exam", report?.finalExam],
-                ].map(([exam, marks], i) => (
-                  <tr key={i} className="border-t">
-
-                    <td className="p-3">{exam}</td>
-
-                    <td className="p-3">
-                      {marks !== undefined && marks !== null
-                        ? marks
-                        : "Pending"}
-                    </td>
-
-                    <td className="p-3">
-                      {marks === undefined || marks === null
-                        ? "Pending"
-                        : marks >= 40
-                        ? "Pass"
-                        : "Fail"}
-                    </td>
-
-                  </tr>
-                ))}
-
-              </tbody>
-
-            </table>
-
+          <div className="bg-white rounded-3xl shadow-sm p-6">
+            <ReportPDF
+              student={{
+                ...student,
+                report,
+              }}
+            />
           </div>
 
         </div>
 
       </div>
+
     </div>
   );
 }

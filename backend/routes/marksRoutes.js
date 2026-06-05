@@ -3,9 +3,11 @@ const router = express.Router();
 
 const Marks = require("../models/Marks");
 
-// ===============================
-// SAVE / UPDATE EXAM MARKS (UPSERT)
-// ===============================
+/*
+=========================================
+SAVE / UPDATE EXAM MARKS
+=========================================
+*/
 router.post("/upload", async (req, res) => {
   try {
     const {
@@ -21,7 +23,6 @@ router.post("/upload", async (req, res) => {
       section,
     } = req.body;
 
-    // exam mapping
     const examKeyMap = {
       "Unit Test 1": "unitTest1",
       "Unit Test 2": "unitTest2",
@@ -38,47 +39,72 @@ router.post("/upload", async (req, res) => {
     if (!examKey) {
       return res.status(400).json({
         success: false,
-        message: "Invalid exam name",
+        message: "Invalid Exam Name",
       });
     }
 
-    const filter = { studentId, academicYear };
-
-    const update = {
-      $set: {
+    const report = await Marks.findOneAndUpdate(
+      {
         studentId,
-        studentName,
-        rollNumber,
-        class: className,
-        section,
         academicYear,
-        teacherName,
-        remarks,
-        [`exams.${examKey}.subjects`]: subjects,
       },
-    };
-
-    const options = {
-      new: true,
-      upsert: true,
-    };
-
-    const result = await Marks.findOneAndUpdate(
-      filter,
-      update,
-      options
+      {
+        $set: {
+          studentId,
+          studentName,
+          rollNumber,
+          class: className,
+          section,
+          academicYear,
+          teacherName,
+          remarks,
+          [`exams.${examKey}.subjects`]: subjects,
+        },
+      },
+      {
+        upsert: true,
+        new: true,
+      }
     );
 
     res.status(200).json({
       success: true,
-      message: "Marks saved successfully",
-      data: result,
+      data: report,
     });
-
-  } catch (err) {
+  } catch (error) {
     res.status(500).json({
       success: false,
-      error: err.message,
+      error: error.message,
+    });
+  }
+});
+
+/*
+=========================================
+GET STUDENT REPORT
+=========================================
+*/
+router.get("/report/:studentId", async (req, res) => {
+  try {
+    const report = await Marks.findOne({
+      studentId: req.params.studentId,
+    });
+
+    if (!report) {
+      return res.status(404).json({
+        success: false,
+        message: "Report not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      report,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
     });
   }
 });

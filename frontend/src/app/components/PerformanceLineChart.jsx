@@ -8,60 +8,29 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-function PerformanceLineChart({ report }) {
-  const data = [
-    {
-      exam: "IT1",
-      marks: Number(report?.internalTest1) || 0,
-    },
-    {
-      exam: "IT2",
-      marks: Number(report?.internalTest2) || 0,
-    },
-    {
-      exam: "Project1",
-      marks: Number(report?.project1) || 0,
-    },
-    {
-      exam: "Half Yearly",
-      marks: Number(report?.halfYearly) || 0,
-    },
-    {
-      exam: "IT3",
-      marks: Number(report?.internalTest3) || 0,
-    },
-    {
-      exam: "IT4",
-      marks: Number(report?.internalTest4) || 0,
-    },
-    {
-      exam: "Project2",
-      marks: Number(report?.project2) || 0,
-    },
-    {
-      exam: "Final",
-      marks: Number(report?.finalExam) || 0,
-    },
-  ];
-
+function PerformanceLineChart({ chartData = [] }) {
   return (
     <div className="bg-white rounded-3xl shadow-sm p-6">
       <h2 className="text-xl font-bold mb-6">
-        Student Performance Trend
+        Performance Trend
       </h2>
 
       <div className="h-[350px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="4 4" />
+          <LineChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" />
+
             <XAxis dataKey="exam" />
-            <YAxis />
+
+            <YAxis domain={[0, 100]} />
+
             <Tooltip />
+
             <Line
               type="monotone"
-              dataKey="marks"
-              strokeWidth={3}
+              dataKey="percentage"
               stroke="#7c3aed"
+              strokeWidth={4}
             />
           </LineChart>
         </ResponsiveContainer>

@@ -1,114 +1,219 @@
-import { useRef } from "react";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import React, { useRef } from "react";
+import { useReactToPrint } from "react-to-print";
+import { Download } from "lucide-react";
 
 function ReportPDF({ student }) {
   const reportRef = useRef();
 
-  const downloadPDF = async () => {
-    const input = reportRef.current;
+  const report = student?.report || {};
+  const exams = report?.exams || {};
 
-    if (!input) return;
+  let totalObtained = 0;
+  let totalMarks = 0;
 
-    try {
-      const canvas = await html2canvas(input, {
-        scale: 2, // better quality
-        useCORS: true,
-      });
-
-      const imgData = canvas.toDataURL("image/png");
-
-      const pdf = new jsPDF("p", "mm", "a4");
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-
-      const imgProps = pdf.getImageProperties(imgData);
-
-      const pdfHeight =
-        (imgProps.height * pdfWidth) / imgProps.width;
-
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-
-      pdf.save(`${student?.name || "student"}_report.pdf`);
-    } catch (error) {
-      console.log("PDF Error:", error);
-      alert("Failed to generate PDF");
-    }
-  };
-
-  const marks = student?.marks || {
-    internalTest1: 0,
-    internalTest2: 0,
-    halfYearly: 0,
-    annual: 0,
-  };
-
-  const total =
-    Number(marks.internalTest1 || 0) +
-    Number(marks.internalTest2 || 0) +
-    Number(marks.halfYearly || 0) +
-    Number(marks.annual || 0);
+  Object.values(exams).forEach((exam) => {
+    exam?.subjects?.forEach((sub) => {
+      totalObtained += Number(sub?.marksObtained || 0);
+      totalMarks += Number(sub?.totalMarks || 0);
+    });
+  });
 
   const percentage =
-    total > 0 ? (total / 400) * 100 : 0;
+    totalMarks > 0
+      ? ((totalObtained / totalMarks) * 100).toFixed(2)
+      : "0.00";
+
+  const handlePrint = useReactToPrint({
+    contentRef: reportRef,
+    documentTitle: `${student?.name || "Student"} Report`,
+  });
 
   return (
-    <div className="space-y-4">
-
-      {/* REPORT AREA */}
+    <div className="space-y-6">
+      {/* REPORT CONTENT */}
       <div
         ref={reportRef}
-        className="bg-white p-6 rounded-xl shadow-md"
+        className="bg-white rounded-2xl shadow-lg p-8"
       >
-        <h1 className="text-2xl font-bold mb-4">
-          Student Performance Report
-        </h1>
+        {/* HEADER */}
+        <div className="border-b pb-4 mb-6">
+          <h1 className="text-3xl font-bold text-center">
+            Student Progress Report
+          </h1>
 
-        <div className="space-y-2">
-          <p><b>Name:</b> {student?.name}</p>
-          <p><b>Roll Number:</b> {student?.rollNumber}</p>
-          <p><b>Class:</b> {student?.class}</p>
-          <p><b>Section:</b> {student?.section}</p>
+          <p className="text-center text-gray-500 mt-2">
+            Academic Session: {student?.academicYear || "2025-26"}
+          </p>
         </div>
 
-        <hr className="my-4" />
+        {/* STUDENT DETAILS */}
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <div className="border rounded-xl p-4">
+            <h2 className="font-bold text-lg mb-3">
+              Student Details
+            </h2>
 
-        <h2 className="font-semibold mb-2">Marks</h2>
+            <p>
+              <strong>Name:</strong> {student?.name}
+            </p>
 
-        <p>Internal Test 1: {marks.internalTest1}</p>
-        <p>Internal Test 2: {marks.internalTest2}</p>
-        <p>Half Yearly: {marks.halfYearly}</p>
-        <p>Annual: {marks.annual}</p>
+            <p>
+              <strong>Roll No:</strong>{" "}
+              {student?.rollNumber}
+            </p>
 
-        <hr className="my-4" />
+            <p>
+              <strong>Class:</strong> {student?.class}
+            </p>
 
-        <p className="font-bold">Total: {total} / 400</p>
+            <p>
+              <strong>Section:</strong>{" "}
+              {student?.section}
+            </p>
+          </div>
 
-        <p className="font-bold">
-          Percentage: {percentage.toFixed(2)}%
-        </p>
+          <div className="border rounded-xl p-4">
+            <h2 className="font-bold text-lg mb-3">
+              Academic Summary
+            </h2>
 
-        <p className="mt-2">
-          Status:{" "}
-          <span
-            className={
-              percentage >= 40
-                ? "text-green-600 font-bold"
-                : "text-red-600 font-bold"
+            <p>
+              <strong>Total Obtained:</strong>{" "}
+              {totalObtained}
+            </p>
+
+            <p>
+              <strong>Total Marks:</strong>{" "}
+              {totalMarks}
+            </p>
+
+            <p>
+              <strong>Percentage:</strong>{" "}
+              {percentage}%
+            </p>
+
+            <p>
+              <strong>Status:</strong>{" "}
+              {Number(percentage) >= 40
+                ? "PASS"
+                : "FAIL"}
+            </p>
+          </div>
+        </div>
+
+        {/* EXAM WISE MARKS */}
+        {Object.entries(exams).map(
+          ([examName, exam]) => {
+            if (
+              !exam?.subjects ||
+              exam.subjects.length === 0
+            ) {
+              return null;
             }
-          >
-            {percentage >= 40 ? "PASS" : "FAIL"}
-          </span>
-        </p>
+
+            return (
+              <div
+                key={examName}
+                className="mb-8"
+              >
+                <h2 className="text-xl font-bold mb-3 border-b pb-2 capitalize">
+                  {examName}
+                </h2>
+
+                <table className="w-full border border-collapse">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border p-2">
+                        Subject
+                      </th>
+
+                      <th className="border p-2">
+                        Obtained
+                      </th>
+
+                      <th className="border p-2">
+                        Total
+                      </th>
+
+                      <th className="border p-2">
+                        %
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {exam.subjects.map(
+                      (sub, index) => (
+                        <tr key={index}>
+                          <td className="border p-2">
+                            {sub.subject}
+                          </td>
+
+                          <td className="border p-2 text-center">
+                            {
+                              sub.marksObtained
+                            }
+                          </td>
+
+                          <td className="border p-2 text-center">
+                            {sub.totalMarks}
+                          </td>
+
+                          <td className="border p-2 text-center">
+                            {sub.totalMarks
+                              ? (
+                                  (sub.marksObtained /
+                                    sub.totalMarks) *
+                                  100
+                                ).toFixed(1)
+                              : 0}
+                            %
+                          </td>
+                        </tr>
+                      )
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            );
+          }
+        )}
+
+        {/* TEACHER REMARKS */}
+        <div className="mt-8 border rounded-xl p-4">
+          <h2 className="font-bold text-lg mb-2">
+            Teacher Remarks
+          </h2>
+
+          <p>
+            {report?.remarks ||
+              "No remarks available"}
+          </p>
+        </div>
       </div>
 
       {/* DOWNLOAD BUTTON */}
-      <button
-        onClick={downloadPDF}
-        className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg"
-      >
-        Download PDF
-      </button>
+      <div className="flex justify-center">
+        <button
+          onClick={handlePrint}
+          className="
+            flex
+            items-center
+            gap-2
+            bg-blue-600
+            hover:bg-blue-700
+            text-white
+            px-6
+            py-3
+            rounded-xl
+            font-semibold
+            shadow-lg
+          "
+        >
+          <Download size={20} />
+          Download / Print Report
+        </button>
+      </div>
     </div>
   );
 }
