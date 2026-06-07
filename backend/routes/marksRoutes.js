@@ -43,6 +43,32 @@ router.post("/upload", async (req, res) => {
       });
     }
 
+        const existingReport = await Marks.findOne({
+          studentId,
+          academicYear,
+        });
+
+        if (
+          existingReport &&
+          existingReport.exams?.[examKey]?.subjects
+        ) {
+          const existingSubjects =
+            existingReport.exams[examKey].subjects;
+
+          const duplicate = subjects.find((newSub) =>
+            existingSubjects.some(
+              (oldSub) => oldSub.subject === newSub.subject
+            )
+          );
+
+          if (duplicate) {
+            return res.status(400).json({
+              success: false,
+              message: `${duplicate.subject} already exists in ${examName}`,
+            });
+          }
+        }
+
     const report = await Marks.findOneAndUpdate(
       {
         studentId,

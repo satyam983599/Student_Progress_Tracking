@@ -60,6 +60,15 @@ function MarksEntry() {
     "Biology",
   ];
 
+  const availableSubjects = subjects.filter(
+  (subject) =>
+    !subjectMarks.some(
+      (item) =>
+        item.examName === subjectData.examName &&
+        item.subject === subject
+    )
+);
+
   // =========================
   // FILTER STUDENTS
   // =========================
@@ -76,28 +85,48 @@ function MarksEntry() {
   // =========================
   // ADD SUBJECT MARKS
   // =========================
-  const addSubjectMarks = () => {
-    if (
-      !subjectData.subject ||
-      !subjectData.marksObtained ||
-      !subjectData.totalMarks ||
-      !subjectData.examName ||
-      !subjectData.resultDate
-    ) {
-      alert("Fill all fields");
-      return;
-    }
+const addSubjectMarks = () => {
+  if (
+    !subjectData.subject ||
+    !subjectData.marksObtained ||
+    !subjectData.totalMarks ||
+    !subjectData.examName ||
+    !subjectData.resultDate
+  ) {
+    alert("Fill all fields");
+    return;
+  }
 
-    setSubjectMarks([...subjectMarks, subjectData]);
+  const alreadyExists = subjectMarks.some(
+    (item) =>
+      item.examName === subjectData.examName &&
+      item.subject === subjectData.subject
+  );
 
-    setSubjectData({
-      subject: "",
-      marksObtained: "",
-      totalMarks: "",
-      examName: "",
-      resultDate: "",
-    });
-  };
+  if (alreadyExists) {
+    alert(
+      `${subjectData.subject} already added in ${subjectData.examName}`
+    );
+    return;
+  }
+
+  setSubjectMarks([
+    ...subjectMarks,
+    {
+      ...subjectData,
+      marksObtained: Number(subjectData.marksObtained),
+      totalMarks: Number(subjectData.totalMarks),
+    },
+  ]);
+
+  setSubjectData({
+    subject: "",
+    marksObtained: "",
+    totalMarks: "",
+    examName: subjectData.examName,
+    resultDate: "",
+  });
+};
 
   const removeSubject = (index) => {
     setSubjectMarks(subjectMarks.filter((_, i) => i !== index));
@@ -223,16 +252,22 @@ function MarksEntry() {
 
             <div className="grid md:grid-cols-5 gap-4">
 
-              <select
+           <select
                 value={subjectData.subject}
                 onChange={(e) =>
-                  setSubjectData({ ...subjectData, subject: e.target.value })
+                  setSubjectData({
+                    ...subjectData,
+                    subject: e.target.value,
+                  })
                 }
                 className="border p-3 rounded-xl"
               >
-                <option>Subject</option>
-                {subjects.map((s) => (
-                  <option key={s}>{s}</option>
+                <option value="">Select Subject</option>
+
+                {availableSubjects.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
                 ))}
               </select>
 
@@ -299,6 +334,40 @@ function MarksEntry() {
               <Plus size={18} />
               Add Subject
             </button>
+            {subjectMarks.length > 0 && (
+  <div className="mt-6 overflow-x-auto">
+    <table className="w-full border border-gray-200">
+      <thead>
+        <tr className="bg-gray-100">
+          <th className="border p-2">Exam</th>
+          <th className="border p-2">Subject</th>
+          <th className="border p-2">Marks</th>
+          <th className="border p-2">Total</th>
+          <th className="border p-2">Action</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {subjectMarks.map((item, index) => (
+          <tr key={index}>
+            <td className="border p-2">{item.examName}</td>
+            <td className="border p-2">{item.subject}</td>
+            <td className="border p-2">{item.marksObtained}</td>
+            <td className="border p-2">{item.totalMarks}</td>
+            <td className="border p-2">
+              <button
+                onClick={() => removeSubject(index)}
+                className="bg-red-500 text-white px-3 py-1 rounded"
+              >
+                Delete
+              </button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
           </div>
         )}
 
