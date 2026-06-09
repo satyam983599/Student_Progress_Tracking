@@ -60,7 +60,7 @@ function MarksEntry() {
     "Biology",
   ];
 
-const availableSubjects = subjects.filter(
+  const availableSubjects = subjects.filter(
   (subject) =>
     !subjectMarks.some(
       (item) =>

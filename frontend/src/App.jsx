@@ -6,6 +6,10 @@ import Students from "./app/pages/Students";
 import StudentReport from "./app/pages/StudentReport";
 import MarksEntry from "./app/pages/MarksEntry";
 import AddStudent from "./app/pages/AddStudent";
+import Reports from "./app/pages/Reports";
+import Subjects from "./app/pages/Subjects";
+import AboutUs from "./app/pages/AboutUs";
+
 
 function App() {
   return (
@@ -24,6 +28,9 @@ function App() {
 
       {/* Add Student */}
       <Route path="/add-student" element={<AddStudent />} />
+            <Route path="/reports" element={<Reports />} />
+      <Route path="/subjects" element={<Subjects />} />
+      <Route path="/about" element={<AboutUs />} />
     </Routes>
   );
 }

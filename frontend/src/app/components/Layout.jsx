@@ -6,7 +6,7 @@ function Layout({ children }) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-slate-100">
 
       {/* Sidebar */}
       <Sidebar
@@ -14,18 +14,21 @@ function Layout({ children }) {
         setCollapsed={setCollapsed}
       />
 
-      {/* Main Area */}
-      <div className="flex-1 flex flex-col">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* Navbar */}
         <Navbar />
 
         {/* Page Content */}
-        <div className="p-6">
-          {children}
-        </div>
+        <main className="flex-1 overflow-y-auto">
+          <div className="max-w-[1600px] mx-auto p-6 md:p-8">
+            {children}
+          </div>
+        </main>
 
       </div>
+
     </div>
   );
 }

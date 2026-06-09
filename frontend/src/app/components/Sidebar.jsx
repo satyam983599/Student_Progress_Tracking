@@ -4,6 +4,7 @@ import {
   ClipboardList,
   BarChart3,
   BookOpen,
+   Info,
   Settings,
   LogOut,
   GraduationCap,
@@ -19,7 +20,7 @@ const menuItems = [
   { name: "Marks Entry", icon: ClipboardList, path: "/marks-entry" },
   { name: "Reports", icon: BarChart3, path: "/reports" },
   { name: "Subjects", icon: BookOpen, path: "/subjects" },
-  { name: "Analytics", icon: BarChart3, path: "/analytics" },
+ { name: "About Us", icon: Info, path: "/about" },
 ];
 
 function Sidebar({ collapsed, setCollapsed }) {
