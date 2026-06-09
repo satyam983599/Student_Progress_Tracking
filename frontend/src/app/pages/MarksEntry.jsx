@@ -60,7 +60,7 @@ function MarksEntry() {
     "Biology",
   ];
 
-  const availableSubjects = subjects.filter(
+const availableSubjects = subjects.filter(
   (subject) =>
     !subjectMarks.some(
       (item) =>
@@ -97,13 +97,24 @@ const addSubjectMarks = () => {
     return;
   }
 
-  const alreadyExists = subjectMarks.some(
+  // Prevent mixing exams
+  if (
+    subjectMarks.length > 0 &&
+    subjectMarks[0].examName !== subjectData.examName
+  ) {
+    alert(
+      `Please save ${subjectMarks[0].examName} first before adding another exam`
+    );
+    return;
+  }
+
+  const duplicate = subjectMarks.find(
     (item) =>
       item.examName === subjectData.examName &&
       item.subject === subjectData.subject
   );
 
-  if (alreadyExists) {
+  if (duplicate) {
     alert(
       `${subjectData.subject} already added in ${subjectData.examName}`
     );
@@ -136,48 +147,72 @@ const addSubjectMarks = () => {
   // SAVE MARKS
   // =========================
   const handleSave = async () => {
-    if (!selectedStudent) {
-      alert("Select Student");
-      return;
-    }
+  if (!selectedStudent) {
+    alert("Select Student");
+    return;
+  }
 
-    if (subjectMarks.length === 0) {
-      alert("Add subject marks");
-      return;
-    }
+  if (subjectMarks.length === 0) {
+    alert("Add Subject Marks");
+    return;
+  }
 
-    try {
-      const payload = {
-        studentId: selectedStudent._id,
-        studentName: selectedStudent.name,
-        rollNumber: selectedStudent.rollNumber,
-        class: selectedStudent.class,
-        section: selectedStudent.section,
-        academicYear: selectedStudent.academicYear || "2025-26",
+  try {
+    const payload = {
+      studentId: selectedStudent._id,
+      studentName: selectedStudent.name,
+      rollNumber: selectedStudent.rollNumber,
+      class: selectedStudent.class,
+      section: selectedStudent.section,
+      academicYear:
+        selectedStudent.academicYear || "2025-26",
 
-        teacherName,
-        remarks,
+      teacherName,
+      remarks,
 
-        // ⚠️ IMPORTANT: examName comes from subjectData (ALL SUBJECTS MUST MATCH SAME EXAM)
-        examName: subjectMarks[0]?.examName,
+      // IMPORTANT
+      examName: subjectMarks[0].examName,
 
-        subjects: subjectMarks,
-      };
+      subjects: subjectMarks.map((item) => ({
+        subject: item.subject,
+        marksObtained: item.marksObtained,
+        totalMarks: item.totalMarks,
+        resultDate: item.resultDate,
+      })),
+    };
 
-      const res = await api.post("/marks/upload", payload);
+    console.log("PAYLOAD:", payload);
 
-      console.log("SAVED:", res.data);
+    const res = await api.post(
+      "/marks/upload",
+      payload
+    );
 
-      alert("Marks Saved Successfully");
+    console.log(res.data);
 
-      setSubjectMarks([]);
-      setTeacherName("");
-      setRemarks("");
-    } catch (err) {
-      console.log(err);
-      alert(err?.response?.data?.message || "Error saving marks");
-    }
-  };
+    alert("Marks Saved Successfully");
+
+    setSubjectMarks([]);
+
+    setSubjectData({
+      subject: "",
+      marksObtained: "",
+      totalMarks: "",
+      examName: "",
+      resultDate: "",
+    });
+
+    setTeacherName("");
+    setRemarks("");
+  } catch (err) {
+    console.log(err);
+
+    alert(
+      err?.response?.data?.message ||
+        "Error saving marks"
+    );
+  }
+};
 
   return (
     <Layout>

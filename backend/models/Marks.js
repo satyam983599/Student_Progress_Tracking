@@ -1,15 +1,38 @@
 const mongoose = require("mongoose");
 
-const subjectSchema = new mongoose.Schema({
-  subject: String,
-  marksObtained: Number,
-  totalMarks: Number,
-  resultDate: String,
-});
+const subjectSchema = new mongoose.Schema(
+  {
+    subject: {
+      type: String,
+      required: true,
+    },
 
-const examSchema = new mongoose.Schema({
-  subjects: [subjectSchema],
-});
+    marksObtained: {
+      type: Number,
+      required: true,
+    },
+
+    totalMarks: {
+      type: Number,
+      required: true,
+    },
+
+    resultDate: {
+      type: String,
+    },
+  },
+  { _id: false }
+);
+
+const examSchema = new mongoose.Schema(
+  {
+    subjects: {
+      type: [subjectSchema],
+      default: [],
+    },
+  },
+  { _id: false }
+);
 
 const marksSchema = new mongoose.Schema(
   {
@@ -23,27 +46,70 @@ const marksSchema = new mongoose.Schema(
     rollNumber: Number,
     class: Number,
     section: String,
-    academicYear: String,
+
+    academicYear: {
+      type: String,
+      default: "2025-26",
+    },
 
     teacherName: String,
     remarks: String,
 
-    // ⭐ MAIN CHANGE (ERP STRUCTURE)
     exams: {
-      unitTest1: examSchema,
-      unitTest2: examSchema,
-      project1: examSchema,
-      halfYearly: examSchema,
-      unitTest3: examSchema,
-      unitTest4: examSchema,
-      project2: examSchema,
-      finalExam: examSchema,
+      unitTest1: {
+        type: examSchema,
+        default: () => ({ subjects: [] }),
+      },
+
+      unitTest2: {
+        type: examSchema,
+        default: () => ({ subjects: [] }),
+      },
+
+      project1: {
+        type: examSchema,
+        default: () => ({ subjects: [] }),
+      },
+
+      halfYearly: {
+        type: examSchema,
+        default: () => ({ subjects: [] }),
+      },
+
+      unitTest3: {
+        type: examSchema,
+        default: () => ({ subjects: [] }),
+      },
+
+      unitTest4: {
+        type: examSchema,
+        default: () => ({ subjects: [] }),
+      },
+
+      project2: {
+        type: examSchema,
+        default: () => ({ subjects: [] }),
+      },
+
+      finalExam: {
+        type: examSchema,
+        default: () => ({ subjects: [] }),
+      },
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-// 🔥 one record per student per year
-marksSchema.index({ studentId: 1, academicYear: 1 }, { unique: true });
+marksSchema.index(
+  {
+    studentId: 1,
+    academicYear: 1,
+  },
+  {
+    unique: true,
+  }
+);
 
 module.exports = mongoose.model("Marks", marksSchema);

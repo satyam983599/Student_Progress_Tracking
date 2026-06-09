@@ -5,57 +5,88 @@ exports.saveMarks = async (req, res) => {
     const {
       studentId,
       academicYear,
-      studentName,
-      rollNumber,
-      class: className,
-      section,
+      examName,
+      subjects,
       teacherName,
       remarks,
-      subjects,
+      rollNumber,
+      studentName,
+      class: className,
+      section,
     } = req.body;
 
-    // 🔥 FORCE SAFE UPSERT LOGIC
-    const filter = {
-      studentId: studentId,
-      academicYear: academicYear,
+    const examKeyMap = {
+      "Unit Test 1": "unitTest1",
+      "Unit Test 2": "unitTest2",
+      "Project 1": "project1",
+      "Half Yearly": "halfYearly",
+      "Unit Test 3": "unitTest3",
+      "Unit Test 4": "unitTest4",
+      "Project 2": "project2",
+      "Final Exam": "finalExam",
     };
 
-    const update = {
-      $set: {
+    const examKey = examKeyMap[examName];
+
+    if (!examKey) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Exam Name",
+      });
+    }
+
+    let report = await Marks.findOne({
+      studentId,
+      academicYear,
+    });
+
+    if (!report) {
+      report = await Marks.create({
+        studentId,
         studentName,
         rollNumber,
         class: className,
         section,
+        academicYear,
         teacherName,
         remarks,
-        academicYear,
-      },
+      });
+    }
 
-      // 🔥 APPEND SUBJECTS IN SAME DOCUMENT
-      $push: {
-        subjects: { $each: subjects },
-      },
-    };
+    const existingSubjects =
+      report.exams?.[examKey]?.subjects || [];
 
-    const options = {
-      upsert: true,   // 👈 THIS IS THE MAGIC
-      new: true,
-    };
+    for (const subject of subjects) {
+      const duplicate = existingSubjects.find(
+        (s) =>
+          s.subject.toLowerCase() ===
+          subject.subject.toLowerCase()
+      );
 
-    const result = await Marks.findOneAndUpdate(
-      filter,
-      update,
-      options
+      if (duplicate) {
+        return res.status(400).json({
+          success: false,
+          message: `${subject.subject} already exists in ${examName}`,
+        });
+      }
+    }
+
+    report.teacherName = teacherName;
+    report.remarks = remarks;
+
+    report.exams[examKey].subjects.push(
+      ...subjects
     );
 
-    return res.status(200).json({
-      success: true,
-      message: "Marks saved in single document",
-      data: result,
-    });
+    await report.save();
 
+    res.status(200).json({
+      success: true,
+      message: "Marks saved successfully",
+      report,
+    });
   } catch (error) {
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: error.message,
     });
