@@ -9,28 +9,92 @@ import AddStudent from "./app/pages/AddStudent";
 import Reports from "./app/pages/Reports";
 import Subjects from "./app/pages/Subjects";
 import AboutUs from "./app/pages/AboutUs";
+import Login from "./app/pages/Login";
+import Register from "./app/pages/Register";
 
+/* Auth */
+import ProtectedRoute from "./app/components/ProtectedRoute";
 
 function App() {
   return (
     <Routes>
-      {/* Dashboard */}
-      <Route path="/" element={<Dashboard />} />
+      <Route path="/register" element={<Register />} />
+      {/* PUBLIC ROUTE */}
+      <Route path="/login" element={<Login />} />
 
-      {/* Students */}
-      <Route path="/students" element={<Students />} />
+      {/* PROTECTED ROUTES */}
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
 
-      {/* Student Report */}
-      <Route path="/report/:id" element={<StudentReport />} />
+      <Route
+        path="/students"
+        element={
+          <ProtectedRoute>
+            <Students />
+          </ProtectedRoute>
+        }
+      />
 
-      {/* Marks Entry */}
-      <Route path="/marks-entry" element={<MarksEntry />} />
+      <Route
+        path="/report/:id"
+        element={
+          <ProtectedRoute>
+            <StudentReport />
+          </ProtectedRoute>
+        }
+      />
 
-      {/* Add Student */}
-      <Route path="/add-student" element={<AddStudent />} />
-            <Route path="/reports" element={<Reports />} />
-      <Route path="/subjects" element={<Subjects />} />
-      <Route path="/about" element={<AboutUs />} />
+      <Route
+        path="/marks-entry"
+        element={
+          <ProtectedRoute>
+            <MarksEntry />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/add-student"
+        element={
+          <ProtectedRoute>
+            <AddStudent />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/reports"
+        element={
+          <ProtectedRoute>
+            <Reports />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/subjects"
+        element={
+          <ProtectedRoute>
+            <Subjects />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/about"
+        element={
+          <ProtectedRoute>
+            <AboutUs />
+          </ProtectedRoute>
+        }
+      />
+
     </Routes>
   );
 }
