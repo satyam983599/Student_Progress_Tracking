@@ -21,7 +21,23 @@ function MarksEntry() {
   const [remarks, setRemarks] = useState("");
 
   const [subjectMarks, setSubjectMarks] = useState([]);
+  const [subjects, setSubjects] = useState([]);
 
+const fetchSubjects = async () => {
+  try {
+    const res = await fetch(
+      "http://localhost:5000/api/subjects"
+    );
+
+    const data = await res.json();
+
+    if (data.success) {
+      setSubjects(data.subjects);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
   const [subjectData, setSubjectData] = useState({
     subject: "",
     marksObtained: "",
@@ -30,10 +46,10 @@ function MarksEntry() {
     resultDate: "",
   });
 
-  useEffect(() => {
-    dispatch(fetchStudents());
-  }, [dispatch]);
-
+useEffect(() => {
+  dispatch(fetchStudents());
+  fetchSubjects();
+}, [dispatch]);
   // =========================
   // EXAM OPTIONS (FIXED)
   // =========================
@@ -48,24 +64,12 @@ function MarksEntry() {
     { label: "Final Exam", value: "Final Exam" },
   ];
 
-  const subjects = [
-    "Mathematics",
-    "Science",
-    "English",
-    "Hindi",
-    "Social Science",
-    "Computer",
-    "Physics",
-    "Chemistry",
-    "Biology",
-  ];
-
-  const availableSubjects = subjects.filter(
-  (subject) =>
+const availableSubjects = subjects.filter(
+  (sub) =>
     !subjectMarks.some(
       (item) =>
         item.examName === subjectData.examName &&
-        item.subject === subject
+        item.subject === sub.subjectName
     )
 );
 
@@ -299,9 +303,12 @@ const addSubjectMarks = () => {
               >
                 <option value="">Select Subject</option>
 
-                {availableSubjects.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
+               {availableSubjects.map((sub) => (
+                  <option
+                    key={sub._id}
+                    value={sub.subjectName}
+                  >
+                    {sub.subjectName}
                   </option>
                 ))}
               </select>
