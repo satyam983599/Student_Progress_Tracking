@@ -114,6 +114,7 @@ A full-stack School ERP and Student Performance Analytics System built using the
 ## 👨‍💻 Developer
 
 **Satyam Kumar**
+Email id: satyamkumar.mky@gmail.com
 
 B.Tech (Computer Science & Engineering)
 
