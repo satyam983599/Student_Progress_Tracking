@@ -11,6 +11,7 @@ import Subjects from "./app/pages/Subjects";
 import AboutUs from "./app/pages/AboutUs";
 import Login from "./app/pages/Login";
 import Register from "./app/pages/Register";
+import Attendance from "./app/pages/Attendance";
 
 /* Auth */
 import ProtectedRoute from "./app/components/ProtectedRoute";
@@ -85,6 +86,14 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+  path="/attendance"
+  element={
+    <ProtectedRoute>
+      <Attendance />
+    </ProtectedRoute>
+  }
+/>
 
       <Route
         path="/about"

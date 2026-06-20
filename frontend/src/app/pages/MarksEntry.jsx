@@ -248,7 +248,7 @@ const addSubjectMarks = () => {
             className="border p-3 rounded-xl"
           >
             <option value="">Class</option>
-            {[6,7,8,9,10,11,12].map((c) => (
+            {[1,2,3,4,5,6,7,8,9,10,11,12].map((c) => (
               <option key={c} value={c}>
                 Class {c}
               </option>
@@ -264,6 +264,8 @@ const addSubjectMarks = () => {
             <option>A</option>
             <option>B</option>
             <option>C</option>
+           
+
           </select>
 
           <select

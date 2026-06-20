@@ -80,4 +80,27 @@ router.get("/roll/:rollNumber", async (req, res) => {
   }
 });
 
+
+router.get(
+  "/class/:class/section/:section",
+  async (req, res) => {
+    try {
+      const students = await Student.find({
+        class: req.params.class,
+        section: req.params.section,
+      });
+
+      res.json({
+        success: true,
+        students,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+);
+
 module.exports = router;
